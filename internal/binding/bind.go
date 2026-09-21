@@ -187,15 +187,21 @@ func (b *Binder) bindOne(ctx context.Context, decl model.Parameter, arg model.Pa
 // All path-style lookups go through the env map (populated by VarBuilder),
 // so this function has no direct dependency on store.TaskRun or model.Arguments.
 //
-// Routing:
+// Routing (first non-empty field wins; the rest are ignored, since mutual
+// exclusivity is not enforced upstream):
 //
 //	path         → env lookup (keys like "tasks.<n>.outputs.parameters.<p>")
 //	parameter    → env lookup (keys like "workflow.parameters.<n>", "inputs.parameters.<n>",
 //	               or "tasks.<n>.outputs.parameters.<p>" — determined by the key prefix present in env)
 //	expression   → Interpolate(expr, env) then eval
 //	secretKeyRef → secretStore.Get
+//
+// Path and Parameter are effectively the same env lookup; the only difference is
+// that Parameter is passed through normalizeParameterRef (legacy alias handling)
+// while Path is used verbatim. Path is kept as a deprecated alias — see
+// model.ValueFrom for details.
 func (b *Binder) resolveValueFrom(ctx context.Context, vf *model.ValueFrom, env EvalVars) (json.RawMessage, error) {
-	// 1. path
+	// 1. path — deprecated alias of parameter; raw env key, no normalisation.
 	if vf.Path != "" {
 		return lookupEnv(vf.Path, env)
 	}

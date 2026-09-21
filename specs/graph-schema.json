@@ -158,7 +158,7 @@
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Read value from a file path"
+                    "description": "Deprecated alias of parameter: key looked up in the evaluation environment (env lookup, not a file read). Unlike parameter it is not normalised, so legacy workflow.arguments.parameters.* keys do not resolve. Prefer parameter."
                 },
                 "parameter": {
                     "type": "string",
