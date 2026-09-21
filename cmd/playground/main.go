@@ -29,11 +29,11 @@ import (
 	"time"
 
 	aether "github.com/BabySid/aether"
-	"github.com/BabySid/aether/broker"
 	"github.com/BabySid/aether/executor"
 	"github.com/BabySid/aether/internal"
 	"github.com/BabySid/aether/model"
 	"github.com/BabySid/aether/vars"
+	"github.com/BabySid/aether/wire"
 )
 
 // DeploymentSource is a custom vars.Source that exposes deployment metadata
@@ -301,7 +301,7 @@ func buildEngine(timeoutSec int, sched *immediateScheduler) (*aether.Engine, *Me
 		func(ctx context.Context, taskRunID string) {
 			eng.OnTaskStarted(ctx, taskRunID)
 		},
-		func(ctx context.Context, result *broker.TaskResult) {
+		func(ctx context.Context, result *wire.TaskResult) {
 			eng.OnTaskCompleted(ctx, result)
 			select {
 			case finishCh <- struct{}{}:
