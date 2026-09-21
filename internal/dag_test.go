@@ -725,7 +725,7 @@ func TestBuildTaskAssignment_Resources(t *testing.T) {
 	}
 }
 
-// ---- mergeContinueOn (via isDependencySatisfied indirectly tested above;
+// ---- ResolveContinueOn (via isDependencySatisfied indirectly tested above;
 //      test directly via FindReadyTasks with mixed policies) ----
 
 func TestFindReadyTasks_MixedContinueOnUpstreamOverridesDAG(t *testing.T) {
