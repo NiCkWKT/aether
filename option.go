@@ -5,7 +5,6 @@ import (
 	"github.com/BabySid/aether/broker"
 	"github.com/BabySid/aether/cron"
 	"github.com/BabySid/aether/errsink"
-	"github.com/BabySid/aether/executor"
 	"github.com/BabySid/aether/expr"
 	"github.com/BabySid/aether/hook"
 	"github.com/BabySid/aether/idgen"
@@ -23,28 +22,6 @@ type Option func(*Engine)
 func WithStore(s store.Store) Option {
 	return func(e *Engine) {
 		e.store = s
-	}
-}
-
-// WithExecutor registers an executor plugin.
-// Call multiple times to register multiple executor types.
-func WithExecutor(plugin executor.Plugin) Option {
-	return func(e *Engine) {
-		if e.executorReg == nil {
-			e.executorReg = executor.NewRegistry()
-		}
-		// Error ignored: Option functions cannot return errors by design.
-		// Duplicate type names will be caught at workflow validation time.
-		_ = e.executorReg.Register(plugin)
-	}
-}
-
-// WithExecutorRegistry sets a pre-built executor registry.
-// Use this when you already have an *executor.Registry (e.g. shared with a broker)
-// and want to avoid registering each plugin twice.
-func WithExecutorRegistry(reg *executor.Registry) Option {
-	return func(e *Engine) {
-		e.executorReg = reg
 	}
 }
 

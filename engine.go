@@ -14,7 +14,6 @@ import (
 	"github.com/BabySid/aether/broker"
 	"github.com/BabySid/aether/cron"
 	"github.com/BabySid/aether/errsink"
-	"github.com/BabySid/aether/executor"
 	"github.com/BabySid/aether/expr"
 	"github.com/BabySid/aether/hook"
 	"github.com/BabySid/aether/idgen"
@@ -32,10 +31,9 @@ import (
 // All dependencies are injected via Option.
 type Engine struct {
 	// --- required ---
-	store       store.Store
-	executorReg *executor.Registry
-	idGen       idgen.Generator
-	taskBroker  broker.TaskBroker
+	store      store.Store
+	idGen      idgen.Generator
+	taskBroker broker.TaskBroker
 
 	// --- optional ---
 	exprEvaluator  expr.Evaluator
@@ -65,9 +63,16 @@ func New(opts ...Option) (*Engine, error) {
 	if e.store == nil {
 		return nil, fmt.Errorf("aether: %w: Store is required, use WithStore()", ErrValidation)
 	}
-	if e.executorReg == nil || len(e.executorReg.Types()) == 0 {
-		return nil, fmt.Errorf("aether: %w: at least one ExecutorPlugin is required, use WithExecutor()", ErrValidation)
-	}
+	// TODO(executor-capability): The engine is a pure scheduler and must not require
+	// local executor plugins at construction — execution is delegated to the
+	// broker/worker. The previous gate ("at least one ExecutorPlugin is required")
+	// has been removed. Executor type existence and schema compatibility are to be
+	// validated at Submit time instead, against an optional schema source aggregated
+	// from worker.Registry (wire.WorkerInfo.Schemas) and store.SchemaStore (via a
+	// VersionedSchemaRegistry). Until then, an unknown executor type fails at dispatch
+	// on the worker as ExecCodeError. WithExecutor / WithExecutorRegistry and the
+	// executorReg field have been removed; a future SchemaProvider option will supply
+	// the schema source.
 	if e.idGen == nil {
 		return nil, fmt.Errorf("aether: %w: IDGenerator is required, use WithIDGenerator()", ErrValidation)
 	}
