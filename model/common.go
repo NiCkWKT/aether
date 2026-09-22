@@ -105,11 +105,49 @@ type ContinueOn struct {
 	Timeout bool `json:"timeout,omitempty"`
 }
 
-// PhaseConditions defines custom expressions to determine task phase.
+// PhaseConditions defines custom expressions to determine the phase of a task or
+// container. The field appears on both the leaf task node and the DAG template,
+// and each position has its own environment contract.
+//
+// # Leaf contract (task.phaseConditions)
+//
+// Evaluated after the executor's ExecCode has been mapped to a phase. The
+// expressions may override that verdict in any direction.
+//
+// Environment: phase, code, msg, outputs.parameters.<p>.
+//
+// # Container contract (dag.phaseConditions)
+//
+// Evaluated at container finalization, after children have been aggregated with
+// continueOn awareness. The expressions may override the aggregate in any
+// direction, including Succeeded → Failed and Error/Timeout → Succeeded.
+//
+// Environment: phase, msg, tasks.<child>.phase, tasks.<child>.code / .msg /
+// .outputs.parameters.<p> (only when the child produced outputs), and
+// outputs.parameters.<p> for the container's own collected outputs.
+//
+// loop.phaseConditions is not implemented by the engine today.
+//
+// # Shared semantics
+//
+// Priority is succeeded → failed → error, first match wins. No match falls back
+// to the base phase. An evaluation error is reported to the ErrorSink and treated
+// as no match.
+//
+// Cancellation is never overridable: a Cancelled base phase is never evaluated,
+// so no expression can clear a cancellation. PhaseSkipped and PhaseCancelled are
+// engine-owned and can never be produced or cleared here.
 type PhaseConditions struct {
 	Succeeded string `json:"succeeded,omitempty"`
 	Failed    string `json:"failed,omitempty"`
 	Error     string `json:"error,omitempty"`
+}
+
+// IsEmpty reports whether every condition is unset. A nil receiver is empty.
+// An empty PhaseConditions object is accepted as a no-op wherever the field is
+// legal, so a generated workflow that emits "phaseConditions": {} stays valid.
+func (p *PhaseConditions) IsEmpty() bool {
+	return p == nil || (p.Succeeded == "" && p.Failed == "" && p.Error == "")
 }
 
 // ExecutorSchema is the self-description of an executor plugin.

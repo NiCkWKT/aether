@@ -172,6 +172,19 @@ func validateDAG(wf *model.Workflow, dag *model.DAG) error {
 		if task.Template != "" && FindTemplate(wf, task.Template) == nil {
 			return fmt.Errorf("task %q references unknown template %q", task.Name, task.Template)
 		}
+
+		// A container call site never produces a TaskResult, so phaseConditions has
+		// nothing to mean there. The rule keys off the resolved template type —
+		// consistent with how a template reference takes precedence over an inline
+		// executor — and covers DAG and Loop call sites alike. An empty object is
+		// still accepted (a no-op) so generated workflows stay valid.
+		if task.Template != "" && !task.PhaseConditions.IsEmpty() {
+			if taskTmpl := FindTemplate(wf, task.Template); taskTmpl != nil && taskTmpl.Task == nil {
+				kind := ResolveTemplateType(taskTmpl)
+				return fmt.Errorf("task %q: phaseConditions is not allowed when template %q resolves to a %s; declare phaseConditions on the %s template %q instead",
+					task.Name, task.Template, kind, kind, task.Template)
+			}
+		}
 	}
 
 	// Validate entrypoints reference existing tasks.

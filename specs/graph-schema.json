@@ -515,7 +515,7 @@
         },
         "phaseConditions": {
             "type": "object",
-            "description": "Custom phase determination conditions",
+            "description": "Custom phase determination conditions, evaluated after the base phase is derived. Priority is succeeded > failed > error, first match wins; no match falls back to the base phase; an evaluation error is reported to the ErrorSink and treated as no match. On a leaf task the environment is phase, code, msg, outputs.parameters.<p>. On a DAG template the conditions are applied after continueOn-aware aggregation of its children, and the environment is phase, msg, tasks.<child>.phase (always) plus tasks.<child>.code/.msg/.outputs.parameters.<p> when the child produced outputs, and outputs.parameters.<p> for the DAG's collected outputs. A Cancelled base phase is never overridden. loop.phaseConditions is not implemented.",
             "properties": {
                 "succeeded": {
                     "type": "string",
@@ -652,7 +652,7 @@
                 },
                 "phaseConditions": {
                     "$ref": "#/definitions/phaseConditions",
-                    "description": "Custom phase determination conditions"
+                    "description": "Custom phase determination conditions for a leaf task, evaluated after the executor's ExecCode is mapped to a phase. Not allowed on a task node that references a DAG or Loop template: a container call site is rejected by validation because it never produces a TaskResult. Declare the field on the container template instead."
                 },
                 "hooks": {
                     "$ref": "#/definitions/hooks",
@@ -736,7 +736,7 @@
                 },
                 "phaseConditions": {
                     "$ref": "#/definitions/phaseConditions",
-                    "description": "Custom phase determination conditions"
+                    "description": "Custom phase determination conditions applied at DAG finalization, after continueOn-aware aggregation of its children. The environment exposes phase, msg, tasks.<child>.phase, tasks.<child>.code/.msg/.outputs.parameters.<p> (only when the child produced outputs) and outputs.parameters.<p> for the DAG's collected outputs. A Cancelled aggregate is never overridden."
                 },
                 "timeout": {
                     "$ref": "#/definitions/duration",
@@ -820,7 +820,7 @@
                 },
                 "phaseConditions": {
                     "$ref": "#/definitions/phaseConditions",
-                    "description": "Custom phase determination conditions"
+                    "description": "Custom phase determination conditions. NOT IMPLEMENTED: the engine currently ignores loop.phaseConditions; the field is accepted but has no effect."
                 },
                 "timeout": {
                     "$ref": "#/definitions/duration",

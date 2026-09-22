@@ -220,7 +220,7 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
       <span class="line"><span class="f">tasks</span>: [<a class="tr" href="#Task">Task</a>]<span class="v">+</span> <span class="c"># ≥1 tasks</span></span>
       <span class="line"><span class="f">entrypoints?</span>: <span class="kw">string</span> <span class="v">|</span> <span class="kw">[string]+</span> <span class="c"># omit → auto-infer</span></span>
       <span class="line"><span class="f">continueOn?</span>: <a class="tr" href="#ContinueOn">ContinueOn</a> <span class="c"># DAG-level default</span></span>
-      <span class="line"><span class="f">phaseConditions?</span>: <a class="tr" href="#PhaseConditions">PhaseConditions</a></span>
+      <span class="line"><span class="f">phaseConditions?</span>: <a class="tr" href="#PhaseConditions">PhaseConditions</a> <span class="c"># applied after continueOn-aware aggregation</span></span>
       <span class="line"><span class="f">timeout?</span>: <a class="tr" href="#Duration">Duration</a></span>
     </div>
 
@@ -240,7 +240,7 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
       <span class="line"><span class="f">timeout?</span>: <a class="tr" href="#Duration">Duration</a></span>
       <span class="line"><span class="f">retry?</span>: <a class="tr" href="#Retry">Retry</a></span>
       <span class="line"><span class="f">continueOn?</span>: <a class="tr" href="#ContinueOn">ContinueOn</a> <span class="c"># overrides DAG-level</span></span>
-      <span class="line"><span class="f">phaseConditions?</span>: <a class="tr" href="#PhaseConditions">PhaseConditions</a></span>
+      <span class="line"><span class="f">phaseConditions?</span>: <a class="tr" href="#PhaseConditions">PhaseConditions</a> <span class="c"># leaf only; container call sites rejected</span></span>
       <span class="line"><span class="f">hooks?</span>: <a class="tr" href="#Hooks">Hooks</a></span>
       <span class="line"><span class="f">outputs?</span>: <a class="tr" href="#Outputs">Outputs</a> <span class="c"># executor outputs (inline mode) or standalone template outputs</span></span>
     </div>
@@ -278,7 +278,7 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
       <span class="line"><span class="f">arguments?</span>: <a class="tr" href="#Arguments">Arguments</a> <span class="c"># pass to body template's inputs (distinct from loop's own inputs)</span></span>
       <span class="line"><span class="f">maxIterations?</span> <span class="dv">= 100</span>: <span class="kw">int[1..10000]</span> <span class="c"># safety limit</span></span>
       <span class="line"><span class="f">aggregate?</span>: <a class="tr" href="#Aggregate">Aggregate</a></span>
-      <span class="line"><span class="f">phaseConditions?</span>: <a class="tr" href="#PhaseConditions">PhaseConditions</a></span>
+      <span class="line"><span class="f">phaseConditions?</span>: <a class="tr" href="#PhaseConditions">PhaseConditions</a> <span class="c"># NOT IMPLEMENTED (ignored)</span></span>
       <span class="line"><span class="f">timeout?</span>: <a class="tr" href="#Duration">Duration</a></span>
       <span class="sep">── ① doWhile ──</span>
       <span class="line"><span class="f">repeatCondition</span>: <span class="kw">string</span> <span class="c"># expr; repeat while true</span></span>
@@ -383,6 +383,10 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
       <span class="line"><span class="f">succeeded?</span>: <span class="kw">string</span> <span class="c"># expr → Succeeded</span></span>
       <span class="line"><span class="f">failed?</span>: <span class="kw">string</span> <span class="c"># expr → Failed</span></span>
       <span class="line"><span class="f">error?</span>: <span class="kw">string</span> <span class="c"># expr → Error</span></span>
+      <span class="line c"># priority succeeded &gt; failed &gt; error; first match wins; no match = base phase</span>
+      <span class="line c"># leaf env: phase, code, msg, outputs.parameters.&lt;p&gt;</span>
+      <span class="line c"># DAG env: phase, msg, tasks.&lt;child&gt;.phase, tasks.&lt;child&gt;.code/.msg/.outputs.parameters.&lt;p&gt; (when produced), outputs.parameters.&lt;p&gt;</span>
+      <span class="line c"># DAG conditions apply after continueOn-aware aggregation; Cancelled is never overridden; loop is not implemented</span>
     </div>
 
     <div class="type-card" id="Hooks">

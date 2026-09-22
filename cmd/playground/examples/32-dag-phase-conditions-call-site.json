@@ -1,0 +1,40 @@
+{
+    "apiVersion": "aether/v1",
+    "kind": "Workflow",
+    "metadata": {
+        "name": "dag-phase-conditions-call-site",
+        "annotations": {
+            "description": "A task node that invokes a DAG template while carrying phaseConditions must be rejected at submit: a container call site never produces a TaskResult."
+        }
+    },
+    "spec": {
+        "entrypoint": "main",
+        "templates": [
+            {
+                "dag": {
+                    "name": "main",
+                    "tasks": [
+                        {
+                            "name": "inner-step",
+                            "template": "inner",
+                            "phaseConditions": {
+                                "failed": "true"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "dag": {
+                    "name": "inner",
+                    "tasks": [
+                        {
+                            "name": "leaf",
+                            "executor": {"type": "echo"}
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
