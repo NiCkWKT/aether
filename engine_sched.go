@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BabySid/aether/errsink"
 	"github.com/BabySid/aether/internal"
 	"github.com/BabySid/aether/internal/binding"
 	"github.com/BabySid/aether/model"
@@ -238,15 +237,9 @@ func (e *Engine) advanceScope(ctx context.Context, workflowRunID string, wf *mod
 					WithSiblingTaskRuns(siblings).
 					Build()
 				collector := binding.NewCollector(e.exprEvaluator, e.errorSink)
-				collected, collectErr := collector.CollectDAGOutputs(ctx, dagTmpl.DAG.Outputs, siblings, env)
-				if collectErr != nil {
-					// Report rather than discard: a collection failure means downstream
-					// expressions will silently see a missing output key.
-					e.reportError(ctx, collectErr, errsink.ErrorContext{
-						WorkflowRunID: workflowRunID, TaskRunID: tr.RunID,
-						Operation: "advanceScope.collectDAGOutputs", Severity: errsink.SeverityWarning,
-					})
-				}
+				// CollectDAGOutputs reports per-parameter resolution errors to the
+				// ErrorSink itself and never fails the whole collection.
+				collected := collector.CollectDAGOutputs(ctx, dagTmpl.DAG.Outputs, siblings, env)
 				if collected != nil {
 					containerOutputs = &model.Outputs{
 						ExecOutputs: model.ExecOutputs{Parameters: collected.Parameters},

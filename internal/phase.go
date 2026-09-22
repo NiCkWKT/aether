@@ -100,9 +100,7 @@ func EvalPhaseConditions(
 		"msg":   msg,
 	}
 	if result.ExecOutputs != nil {
-		for _, p := range result.ExecOutputs.Parameters {
-			env["outputs.parameters."+p.Name] = unmarshalParam(p.Value)
-		}
+		addOutputParamValues(env, result.ExecOutputs.Parameters)
 	}
 
 	return applyPhaseConditions(ctx, conditions, eval, basePhase, env, errCtx)
@@ -168,11 +166,18 @@ func BuildContainerPhaseEnv(basePhase model.Phase, msg string, siblings []*store
 	env["phase"] = string(basePhase)
 	env["msg"] = msg
 	if outputs != nil {
-		for _, p := range outputs.Parameters {
-			env["outputs.parameters."+p.Name] = unmarshalParam(p.Value)
-		}
+		addOutputParamValues(env, outputs.Parameters)
 	}
 	return env
+}
+
+// addOutputParamValues writes each output parameter into env under the
+// "outputs.parameters.<name>" key, decoding the raw JSON value to its native Go
+// type. Shared by the leaf and container environment builders.
+func addOutputParamValues(env map[string]any, params []model.Parameter) {
+	for _, p := range params {
+		env["outputs.parameters."+p.Name] = unmarshalParam(p.Value)
+	}
 }
 
 // applyPhaseConditions is the shared core for both the leaf and container entry
