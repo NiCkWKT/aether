@@ -248,25 +248,6 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
     <div class="type-card" id="Executor">
       <span class="tn">Executor</span>
       <span class="line"><span class="f">type</span>: <span class="kw">string</span> <span class="c"># plugin name resolved via executor registry; open value space</span></span>
-      <span class="line"><span class="f">config</span>: <span class="kw">object</span> <span class="c"># executor-specific config; structure determined by type</span></span>
-    </div>
-
-    <div class="type-card" id="ScriptConfig">
-      <span class="tn">ScriptConfig</span> <span class="c"># executor type: script</span>
-      <span class="line"><span class="f">runtime</span>: <span class="kw">string</span> <span class="c"># e.g. "python3", "bash"</span></span>
-      <span class="line"><span class="f">source</span>: <span class="kw">string</span> <span class="c"># script source code</span></span>
-    </div>
-
-    <div class="type-card" id="FunctionConfig">
-      <span class="tn">FunctionConfig</span> <span class="c"># executor type: function</span>
-      <span class="line"><span class="f">name</span>: <span class="kw">string</span> <span class="c"># e.g. "sleep"</span></span>
-      <span class="line"><span class="f">arguments?</span>: <span class="kw">Map&lt;string, any&gt;</span></span>
-    </div>
-
-    <div class="type-card" id="AwaitConfig">
-      <span class="tn">AwaitConfig</span> <span class="c"># executor type: await</span>
-      <span class="line"><span class="f">message?</span>: <span class="kw">string</span> <span class="c"># {{...}} supported</span></span>
-      <span class="line c" style="padding-left:1.5rem;display:block"># pause &amp; wait for external signal via resume API</span>
     </div>
 
     <div class="type-card" id="Loop">
@@ -309,7 +290,7 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
     <div class="type-card" id="Parameter">
       <span class="tn">Parameter</span>
       <span class="line"><span class="f">name</span>: <span class="kw">string</span></span>
-      <span class="line"><span class="f">type?</span> <span class="dv">= "any"</span>: <span class="v">"string"|"number"|"integer"|"boolean"|"object"|"array"|"any"</span></span>
+      <span class="line"><span class="f">type?</span>: <span class="v">"string"|"int"|"float"|"bool"|"json"|"list"|"object"|"array"</span> <span class="c"># not enforced by the engine</span></span>
       <span class="line"><span class="f">value?</span>: <a class="tr" href="#AnyValue">AnyValue</a></span>
       <span class="line"><span class="f">default?</span>: <a class="tr" href="#AnyValue">AnyValue</a></span>
       <span class="line"><span class="f">description?</span>: <span class="kw">string</span></span>
@@ -340,10 +321,9 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
     <div class="type-card" id="Outputs">
       <span class="tn">Outputs</span> <span class="c"># auto + user-declared</span>
       <span class="line"><span class="ro">«readonly» </span><span class="f">phase?</span>: <a class="tr" href="#Phase">Phase</a> <span class="c"># engine auto-populated</span></span>
-      <span class="line"><span class="ro">«readonly» </span><span class="f">code?</span> <span class="dv">= 0</span>: <span class="kw">int</span> <span class="c"># 0=ok, 1=fail</span></span>
-      <span class="line"><span class="f">msg?</span>: <span class="kw">string</span> <span class="c"># human-readable message</span></span>
+      <span class="line"><span class="ro">«readonly» </span><span class="f">code?</span> <span class="dv">= 0</span>: <span class="kw">int</span> <span class="c"># executor return code: 0=Succeeded, 1=Suspended, 2=Failed, 3=Error, 4=Timeout</span></span>
+      <span class="line"><span class="f">message?</span>: <span class="kw">string</span> <span class="c"># human-readable message</span></span>
       <span class="line"><span class="ro">«readonly» </span><span class="f">metrics?</span>: <a class="tr" href="#Metrics">Metrics</a></span>
-      <span class="line"><span class="ro">«readonly» </span><span class="f">progress?</span>: <span class="kw">string</span> <span class="c"># "N/M", e.g. "3/5"</span></span>
       <span class="line"><span class="f">parameters?</span>: [<a class="tr" href="#Parameter">Parameter</a>]</span>
       <span class="line"><span class="f">artifacts?</span>: [<a class="tr" href="#Artifact">Artifact</a>]</span>
     </div>
@@ -375,7 +355,7 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
       <span class="tn">Resources</span> <span class="c"># on task with inline executor</span>
       <span class="line"><span class="f">cpu?</span>: <span class="kw">string</span> <span class="v">|</span> <span class="kw">number</span> <span class="c"># e.g. "100m" or 1</span></span>
       <span class="line"><span class="f">memory?</span>: <span class="kw">string</span> <span class="c"># e.g. "256Mi", "1Gi"</span></span>
-      <span class="line"><span class="f">gpu?</span>: <span class="kw">int[0..]</span></span>
+      <span class="line"><span class="f">gpu?</span>: <span class="kw">string</span></span>
     </div>
 
     <div class="type-card" id="PhaseConditions">
@@ -390,11 +370,14 @@ h1 small { font-size: 0.85rem; color: var(--dim); font-weight: 400; }
     </div>
 
     <div class="type-card" id="Hooks">
-      <span class="tn">Hooks</span> <span class="c"># lifecycle hooks</span>
+      <span class="tn">Hooks</span> <span class="c"># lifecycle hooks (onSuspend/onResume are task-level only)</span>
       <span class="line"><span class="f">onStart?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># workflow/task starts</span></span>
       <span class="line"><span class="f">onSuccess?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># succeeded</span></span>
       <span class="line"><span class="f">onFailure?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># business failure</span></span>
       <span class="line"><span class="f">onError?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># system error</span></span>
+      <span class="line"><span class="f">onSuspend?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># task suspended (ExecCodeSuspended)</span></span>
+      <span class="line"><span class="f">onResume?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># suspended task resumed</span></span>
+      <span class="line"><span class="f">onCancel?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># cancelled via Cancel API</span></span>
       <span class="line"><span class="f">onExit?</span>: <a class="tr" href="#Hook">Hook</a> <span class="c"># always (exit)</span></span>
     </div>
 

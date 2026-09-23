@@ -75,15 +75,15 @@
                     "type": "string",
                     "enum": [
                         "string",
-                        "number",
-                        "integer",
-                        "boolean",
+                        "int",
+                        "float",
+                        "bool",
+                        "json",
+                        "list",
                         "object",
-                        "array",
-                        "any"
+                        "array"
                     ],
-                    "default": "any",
-                    "description": "Parameter type for type checking and validation"
+                    "description": "Parameter type. Carried for documentation and schema consumers; not enforced by the engine."
                 },
                 "value": {
                     "oneOf": [
@@ -412,9 +412,9 @@
                 "code": {
                     "type": "integer",
                     "default": 0,
-                    "description": "Execution result code (auto-populated by engine): 0=success, 1=failure (fail/error/timeout)"
+                    "description": "Executor return code (auto-populated by engine), mapped to phase by the engine: 0=Succeeded, 1=Suspended, 2=Failed, 3=Error, 4=Timeout"
                 },
-                "msg": {
+                "message": {
                     "type": "string",
                     "description": "Human-readable result message or error details"
                 },
@@ -422,12 +422,6 @@
                     "$ref": "#/definitions/metrics",
                     "readOnly": true,
                     "description": "Execution metrics (auto-populated by engine)"
-                },
-                "progress": {
-                    "type": "string",
-                    "pattern": "^[0-9]+/[0-9]+$",
-                    "readOnly": true,
-                    "description": "Execution progress, e.g. '3/5'. For DAG: completed tasks/total tasks; for Loop: completed iterations/total iterations (auto-populated by engine)"
                 },
                 "parameters": {
                     "type": "array",
@@ -506,9 +500,8 @@
                     "description": "Memory resource, e.g. '256Mi', '1Gi'"
                 },
                 "gpu": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "GPU count"
+                    "type": "string",
+                    "description": "GPU resource specification, e.g. '1'"
                 }
             },
             "additionalProperties": false
@@ -538,64 +531,11 @@
                 "type": {
                     "type": "string",
                     "description": "The logical name of the executor plugin that handles this task. The executor registry resolves the plugin by this name at dispatch time. The value space is open and extensible."
-                },
-                "config": {
-                    "type": "object",
-                    "description": "Executor-specific configuration. The accepted fields are determined by the executor type.",
-                    "additionalProperties": true
                 }
             },
             "required": [
-                "type",
-                "config"
+                "type"
             ],
-            "additionalProperties": false
-        },
-        "scriptConfig": {
-            "type": "object",
-            "properties": {
-                "runtime": {
-                    "type": "string",
-                    "description": "Script runtime"
-                },
-                "source": {
-                    "type": "string",
-                    "description": "Script source code"
-                }
-            },
-            "required": [
-                "runtime",
-                "source"
-            ],
-            "additionalProperties": false
-        },
-        "functionConfig": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Built-in or custom function name, e.g. sleep"
-                },
-                "arguments": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "description": "Function arguments"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "additionalProperties": false
-        },
-        "awaitConfig": {
-            "type": "object",
-            "description": "External signal wait configuration. Pauses execution until an external signal is received",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "description": "Notification message with template variable support"
-                }
-            },
             "additionalProperties": false
         },
         "task": {
@@ -1019,6 +959,18 @@
                 "onError": {
                     "$ref": "#/definitions/hook",
                     "description": "Triggered on system error (returned Error). Context: hook.workflow.*, hook.trigger.node/phase/code/msg"
+                },
+                "onSuspend": {
+                    "$ref": "#/definitions/hook",
+                    "description": "Task-level only: triggered when a task suspends (ExecCodeSuspended)"
+                },
+                "onResume": {
+                    "$ref": "#/definitions/hook",
+                    "description": "Task-level only: triggered when a suspended task resumes"
+                },
+                "onCancel": {
+                    "$ref": "#/definitions/hook",
+                    "description": "Triggered when execution is cancelled via the Cancel API"
                 },
                 "onExit": {
                     "$ref": "#/definitions/hook",
