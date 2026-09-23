@@ -145,7 +145,7 @@
                 },
                 "valueFrom": {
                     "$ref": "#/definitions/valueFrom",
-                    "description": "Dynamic value source (path/expression/secret/parameter reference)"
+                    "description": "Dynamic value source (expression/secret/parameter reference)"
                 }
             },
             "required": [
@@ -156,10 +156,6 @@
         "valueFrom": {
             "type": "object",
             "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Deprecated alias of parameter: key looked up in the evaluation environment (env lookup, not a file read). Unlike parameter it is not normalised, so legacy workflow.arguments.parameters.* keys do not resolve. Prefer parameter."
-                },
                 "parameter": {
                     "type": "string",
                     "description": "Reference value from another parameter"

@@ -132,29 +132,6 @@ func TestBinder_Bind_UndeclaredArgPassThrough(t *testing.T) {
 	}
 }
 
-// valueFrom.path looks up env by key.
-func TestBinder_Bind_ArgValueFrom_PathLookup(t *testing.T) {
-	env := EvalVars{"tasks.step1.outputs.parameters.out": "step1-out"}
-	decls := &model.Inputs{
-		Parameters: []model.Parameter{{Name: "p"}},
-	}
-	args := &model.Arguments{
-		Parameters: []model.Parameter{
-			{Name: "p", ValueFrom: &model.ValueFrom{Path: "tasks.step1.outputs.parameters.out"}},
-		},
-	}
-	b := NewBinder(nil, nil, nil)
-	result, err := b.Bind(context.Background(), decls, args, env)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	var got string
-	_ = json.Unmarshal(result.Parameters[0].Value, &got)
-	if got != "step1-out" {
-		t.Fatalf("expected step1-out, got %s", got)
-	}
-}
-
 // valueFrom.parameter with legacy "workflow.arguments.parameters.*" alias is normalised.
 func TestBinder_Bind_ArgValueFrom_LegacyAlias(t *testing.T) {
 	env := EvalVars{"workflow.parameters.env": "prod"}
@@ -260,7 +237,7 @@ func TestBinder_Bind_ArgValueFrom_UnresolvableFallsToDefault(t *testing.T) {
 	}
 	args := &model.Arguments{
 		Parameters: []model.Parameter{
-			{Name: "p", ValueFrom: &model.ValueFrom{Path: "nonexistent.key"}},
+			{Name: "p", ValueFrom: &model.ValueFrom{Parameter: "nonexistent.key"}},
 		},
 	}
 	b := NewBinder(nil, nil, nil)

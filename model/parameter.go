@@ -16,22 +16,11 @@ type Parameter struct {
 // ValueFrom specifies a source for a parameter value.
 //
 // Exactly one source should be set. Resolution tries them in the fixed order
-// Path → Parameter → Expression → SecretKeyRef and uses the first non-empty
+// Parameter → Expression → SecretKeyRef and uses the first non-empty
 // field, silently ignoring the rest (mutual exclusivity is not yet enforced by
 // validate.go). Resolution failures do not fail the task: they are reported to
 // the ErrorSink and the parameter falls back to its Default, or is left empty.
 type ValueFrom struct {
-	// Path is a key looked up directly in the evaluation environment (EvalVars),
-	// e.g. "tasks.fetch.outputs.parameters.body". The value found there is
-	// marshalled to JSON as-is.
-	//
-	// Deprecated alias of Parameter. Unlike Parameter it is NOT normalised, so a
-	// legacy "workflow.arguments.parameters.x" key will not resolve. Prefer
-	// Parameter. The name comes from the original schema wording ("read value
-	// from a file path"); reading from a file is not implemented — in practice
-	// this branch is an env lookup identical to Parameter minus normalisation.
-	Path string `json:"path,omitempty"`
-
 	// Parameter references a value from another parameter or task output by env
 	// key. Recognised prefixes:
 	//

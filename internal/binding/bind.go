@@ -190,23 +190,12 @@ func (b *Binder) bindOne(ctx context.Context, decl model.Parameter, arg model.Pa
 // Routing (first non-empty field wins; the rest are ignored, since mutual
 // exclusivity is not enforced upstream):
 //
-//	path         → env lookup (keys like "tasks.<n>.outputs.parameters.<p>")
 //	parameter    → env lookup (keys like "workflow.parameters.<n>", "inputs.parameters.<n>",
 //	               or "tasks.<n>.outputs.parameters.<p>" — determined by the key prefix present in env)
 //	expression   → Interpolate(expr, env) then eval
 //	secretKeyRef → secretStore.Get
-//
-// Path and Parameter are effectively the same env lookup; the only difference is
-// that Parameter is passed through normalizeParameterRef (legacy alias handling)
-// while Path is used verbatim. Path is kept as a deprecated alias — see
-// model.ValueFrom for details.
 func (b *Binder) resolveValueFrom(ctx context.Context, vf *model.ValueFrom, env EvalVars) (json.RawMessage, error) {
-	// 1. path — deprecated alias of parameter; raw env key, no normalisation.
-	if vf.Path != "" {
-		return lookupEnv(vf.Path, env)
-	}
-
-	// 2. parameter — supports multiple reference formats:
+	// 1. parameter — supports multiple reference formats:
 	//    "workflow.parameters.<name>"
 	//    "workflow.arguments.parameters.<name>"   (legacy alias)
 	//    "inputs.parameters.<name>"
@@ -216,12 +205,12 @@ func (b *Binder) resolveValueFrom(ctx context.Context, vf *model.ValueFrom, env 
 		return lookupEnv(key, env)
 	}
 
-	// 3. expression — interpolate {{...}} first, then evaluate
+	// 2. expression — interpolate {{...}} first, then evaluate
 	if vf.Expression != "" {
 		return b.resolveExpression(ctx, vf.Expression, env)
 	}
 
-	// 4. secretKeyRef
+	// 3. secretKeyRef
 	if vf.SecretKeyRef != nil {
 		return b.resolveSecret(ctx, vf.SecretKeyRef)
 	}

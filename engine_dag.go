@@ -232,7 +232,7 @@ func (e *Engine) dispatchLeafTask(ctx context.Context, workflowRunID string, wf 
 	//
 	// For all other tasks (DAG tasks, top-level tasks), build an EvalVars from workflow args and
 	// sibling TaskRun outputs, then let Binder merge taskDecl.Inputs with taskCall.Arguments and
-	// resolve any valueFrom references (expression, parameter, path, secretKeyRef).
+	// resolve any valueFrom references (parameter, expression, secretKeyRef).
 	var callSiteArgs *model.Arguments
 	if taskCall != nil {
 		callSiteArgs = taskCall.Arguments
