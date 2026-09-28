@@ -12,14 +12,14 @@ import (
 // are deliberately excluded to keep the public API stable and decoupled from
 // storage internals.
 type WorkflowExecution struct {
-	RunID     string
-	Status    model.Phase    // zero value ("") when not yet set
-	Message   string         // human-readable status message
-	Outputs   *model.Outputs // workflow-level outputs, nil until finalized
-	Metrics   *model.Metrics // workflow-level timing metrics
-	CreatedAt time.Time
-	Progress  string          // "completed/total", empty when no tasks
-	Tasks     []TaskExecution // all task runs, in creation order
+	RunID     string          `json:"runID"`
+	Status    model.Phase     `json:"status"`  // zero value ("") when not yet set
+	Message   string          `json:"message"` // human-readable status message
+	Outputs   *model.Outputs  `json:"outputs"` // workflow-level outputs, nil until finalized
+	Metrics   *model.Metrics  `json:"metrics"` // workflow-level timing metrics
+	CreatedAt time.Time       `json:"createdAt"`
+	Progress  string          `json:"progress"` // "completed/total", empty when no tasks
+	Tasks     []TaskExecution `json:"tasks"`    // all task runs, in creation order
 }
 
 // CronWorkflowExecution is the read-only return type of Engine.GetCronWorkflow.
